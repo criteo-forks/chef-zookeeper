@@ -39,10 +39,8 @@ action :install do
     Chef::Log.info "Assuming you've provided your own Java"
   end
 
-  # build-essential is required to build the zookeeper gem
-  build_essential 'install compilation tools' do
-    compile_time true
-  end
+  # some build tools are required to build the zookeeper gem
+  package %w{ autoconf bison flex gcc gcc-c++ gettext make m4 ncurses-devel patch }
 
   chef_gem 'zookeeper' do
     compile_time false

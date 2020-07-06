@@ -8,14 +8,11 @@ version          '12.0.0'
 issues_url 'https://github.com/evertrue/zookeeper-cookbook/issues'
 source_url 'https://github.com/evertrue/zookeeper-cookbook/'
 
-supports         'ubuntu', '>= 16.04'
 supports         'centos', '~> 7.0'
-supports         'oracle', '~> 7.0'
 supports         'redhat', '~> 7.0'
 
 chef_version     '>= 12.10'
 
-depends          'build-essential', '>= 5.0'
 depends          'java', '>= 1.39'
 depends          'runit', '>= 1.7'
 depends          'magic', '>= 1.1'
