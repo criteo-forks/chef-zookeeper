@@ -10,3 +10,5 @@ end
 zookeeper_service 'zookeeper' do
   conf_dir '/etc/zookeeper/conf'
 end
+
+include_recipe 'zookeeper_tester::node'
