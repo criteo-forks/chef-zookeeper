@@ -19,6 +19,8 @@
 
 property :version,             String, default: '3.6.1'
 property :mirror,              String, default: 'http://archive.apache.org/dist/zookeeper/'
+# if url is specified it overrides the default url computation done based on mirror + version
+property :url,                 [String, NilClass], default: nil
 property :checksum,            String
 property :username,            String, default: 'zookeeper'
 property :user_home,           String, default: '/home/zookeeper'
@@ -66,6 +68,7 @@ action :install do
                      "zookeeper-#{new_resource.version}.tar.gz"
                    end
   zookeeper_url = "#{new_resource.mirror}/zookeeper-#{new_resource.version}/#{zookeeper_path}"
+  zookeeper_url = new_resource.url if new_resource.url
 
   ark 'zookeeper' do
     url         zookeeper_url
