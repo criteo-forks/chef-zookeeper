@@ -40,7 +40,8 @@ action :install do
   end
 
   # build-essential is required to build the zookeeper gem
-  build_essential 'install compilation tools'
+  package %w{ autoconf bison flex gcc gcc-c++ gettext make m4 ncurses-devel patch }
+
 
   chef_gem 'zookeeper' do
     compile_time false
