@@ -60,8 +60,15 @@ action :install do
     recursive true
   end
 
+  zookeeper_path = if Gem::Version.new(new_resource.version) >= Gem::Version.new('3.5.0')
+                     "apache-zookeeper-#{new_resource.version}-bin.tar.gz"
+                   else
+                     "zookeeper-#{new_resource.version}.tar.gz"
+                   end
+  zookeeper_url = "#{new_resource.mirror}/zookeeper-#{new_resource.version}/#{zookeeper_path}"
+
   ark 'zookeeper' do
-    url         "#{new_resource.mirror}/zookeeper-#{new_resource.version}/apache-zookeeper-#{new_resource.version}-bin.tar.gz"
+    url         zookeeper_url
     version     new_resource.version
     prefix_root new_resource.install_dir
     prefix_home new_resource.install_dir
