@@ -19,6 +19,7 @@
 # The original filename supplied with ZK is called 'zoo.cfg'
 property :conf_file,         String, name_property: true
 property :conf_dir,          String, default: '/opt/zookeeper/conf'
+property :nodes,             Hash, default: {}
 property :config,            Hash, default: { 'clientPort' => 2181,
                                               'dataDir' => '/var/lib/zookeeper',
                                               'tickTime' => 2000,
@@ -30,17 +31,27 @@ property :env_vars,          Hash, default: {}
 property :user,              String, default: 'zookeeper'
 property :java_opts,         String, default: "-Xmx#{(node['memory']['total'].to_i * 0.8).floor / 1024}m"
 
+include Zk::Gem
+
 action :create do
   directory new_resource.conf_dir do
     owner     new_resource.user
     group     new_resource.user
     recursive true
   end
+  static_conf = "#{new_resource.conf_dir}/#{new_resource.conf_file}"
+  conf = new_resource.config
+  if has_dynamic_config?(new_resource.nodes, static_conf)
+    # FIXME(t.lange): Should we reload zookeeper before applying dynamic config?
+    conf = conf.merge({dynamicConfigFile: dynamic_config_version(static_conf)})
+  else
+    conf = conf.merge(new_resource.nodes)
+  end
 
   file "#{new_resource.conf_dir}/#{new_resource.conf_file}" do
     owner   new_resource.user
     group   new_resource.user
-    content properties_config(new_resource.config)
+    content properties_config(conf)
   end
 
   # Ensure that, even if an attribute is passed in, we can

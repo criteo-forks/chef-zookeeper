@@ -49,6 +49,27 @@ module Zk
       end
     end
 
+    def has_dynamic_config?(nodes, conf_file)
+      return false if nodes.size <= 1
+
+      File.readlines(conf_file).any? do |line|
+        line =~ /dynamicConfigFile/
+      end
+    end
+
+    def dynamic_config_version(conf_file)
+      File.readlines(conf_file).select do |line|
+        line =~ /dynamicConfigFile/
+      end[0].split('=')[1].strip
+    end
+
+    def dynamic_config!(c)
+      # FIXME(t.lange): zk gem will hopefully export the reconfig command one day
+      authstr = ''
+      authstr = "addauth #{auth_scheme} #{auth_cert}\n" unless auth_cert.nil?
+      `echo -e "#{authstr}reconfig -members #{c}" | /opt/zookeeper/bin/zkCli.sh`
+    end
+
     def compile_acls
       require 'zookeeper'
 
