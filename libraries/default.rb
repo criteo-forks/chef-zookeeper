@@ -64,10 +64,11 @@ module Zk
     end
 
     def dynamic_config!(c)
+      require 'mixlib/shellout'
       # FIXME(t.lange): zk gem will hopefully export the reconfig command one day
       authstr = ''
       authstr = "addauth #{auth_scheme} #{auth_cert}\n" unless auth_cert.nil?
-      `echo -e "#{authstr}reconfig -members #{c}" | /opt/zookeeper/bin/zkCli.sh`
+      Mixlib::ShellOut.new("echo -e \"#{authstr}reconfig -members #{c}\" | /opt/zookeeper/bin/zkCli.sh").run_command.error!
     end
 
     def compile_acls

@@ -49,6 +49,9 @@ action :install do
     compile_time false
   end
 
+  chef_gem 'mixlib-shellout' do
+  end
+
   group new_resource.username
 
   user new_resource.username do
