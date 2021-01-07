@@ -63,9 +63,9 @@ module Zk
       ZookeeperConfig.new(config: config)
     end
 
-    def apply(update)
+    def apply!(update)
       immutable_fields = %w[dynamicConfigFile]
-      immutable_fields.each { |k| update.removekey(k) }
+      immutable_fields.each { |k| update.removekey!(k) }
       @config.map! do |k|
         key = k.keys.first
         if immutable_fields.include?(key)
@@ -78,9 +78,9 @@ module Zk
           update.removekey!(key)
           { key => val }
         end
-      end.reject!(:nil?)
+      end.compact!
       update.config.each { |k| @config.append(k) }
-      to_s
+      self
     end
 
     def haskey?(key)

@@ -17,7 +17,7 @@
 # limitations under the License.
 
 property :nodes,            Hash, default: {}
-property :static_conf,      String, default: ""
+property :static_conf,      String, default: ''
 property :auth_cert,   [String, nil], desired_state: false
 property :auth_scheme, default: 'digest', desired_state: false
 property :connect_str, String, required: true, desired_state: false

@@ -51,11 +51,11 @@ action :create do
     content lazy do
       new_conf = Zk::ZookeeperConfig.from_h(conf)
       old_conf = if File.exist?(static_conf)
-                   Zk::ZookeeperConfig.from_text(File.read(static_conf)
+                   Zk::ZookeeperConfig.from_text(File.read(static_conf))
                  else
                    Zk::ZookeeperConfig.new()
                  end
-      old_conf.apply(new_conf)
+      old_conf.apply!(new_conf).to_s
     end
   end
 
