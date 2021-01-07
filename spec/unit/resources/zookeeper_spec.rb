@@ -25,6 +25,7 @@ RSpec.describe Zk::ZookeeperConfig do
     end
     it 'generates a valid object' do
       subject = Zk::ZookeeperConfig.from_h(hash_config)
+      expect(subject).not_to eq nil
     end
   end
 
@@ -52,7 +53,7 @@ RSpec.describe Zk::ZookeeperConfig do
     end
 
     let(:update_hash) do
-      { 'keyC' => 'valueC', 'keyD' => 'valueD', 'keyA' => 'valueE'}
+      { 'keyC' => 'valueC', 'keyD' => 'valueD', 'keyA' => 'valueE' }
     end
 
     let(:update_config) do
@@ -76,10 +77,19 @@ RSpec.describe Zk::ZookeeperConfig do
     end
 
     it 'keeps order of updated fields' do
-      new_entry = subject.config.find{ |k| k.keys.first == 'keyA'}
-      old_entry = existing_config.config.find{ |k| k.keys.first == 'keyA'}
+      expect(subject.index('keyA')).to eq existing_config.index('keyA')
+    end
 
-      expect(subject.config.index(new_entry)).to eq existing_config.config.index(old_entry)
+    it 'does not alter update object' do
+      subject
+      expect(update_config.to_s).to eq Zk::ZookeeperConfig.from_h(update_hash).to_s
+    end
+
+    context 'there is no change' do
+      let(:update_hash) { existing_hash }
+      it 'is idempotent' do
+        expect(subject.to_s).to eq existing_config.to_s
+      end
     end
 
     context 'with immutable_fields in conf' do

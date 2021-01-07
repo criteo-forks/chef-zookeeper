@@ -63,7 +63,8 @@ module Zk
       ZookeeperConfig.new(config: config)
     end
 
-    def apply!(update)
+    def apply!(source)
+      update = source.dup
       immutable_fields = %w[dynamicConfigFile]
       immutable_fields.each { |k| update.removekey!(k) }
       @config.map! do |k|
@@ -95,8 +96,17 @@ module Zk
       @config.select { |k| k.keys.first == key }.first.values.first
     end
 
+    def index(key)
+      val = @config.find { |k| k.keys.first == key }
+      @config.index(val)
+    end
+
     def to_s
       @config.map { |k| "#{k.keys.first}=#{k.values.first}" }.join("\n")
+    end
+
+    def dup
+      ZookeeperConfig.new(config: config.dup)
     end
   end
 
