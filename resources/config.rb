@@ -41,17 +41,22 @@ action :create do
   end
   static_conf = "#{new_resource.conf_dir}/#{new_resource.conf_file}"
   conf = new_resource.config
-  if has_dynamic_config?(new_resource.nodes, static_conf)
-    # FIXME(t.lange): Should we reload zookeeper before applying dynamic config?
-    conf = conf.merge({dynamicConfigFile: dynamic_config_version(static_conf)})
-  else
-    conf = conf.merge(new_resource.nodes)
+  unless has_dynamic_config?(new_resource.nodes, static_conf)
+    conf.merge!(new_resource.nodes)
   end
 
   file "#{new_resource.conf_dir}/#{new_resource.conf_file}" do
     owner   new_resource.user
     group   new_resource.user
-    content properties_config(conf)
+    content lazy do
+      new_conf = Zk::ZookeeperConfig.from_h(conf)
+      old_conf = if File.exist?(static_conf)
+                   Zk::ZookeeperConfig.from_text(File.read(static_conf)
+                 else
+                   Zk::ZookeeperConfig.new()
+                 end
+      old_conf.apply(new_conf)
+    end
   end
 
   # Ensure that, even if an attribute is passed in, we can

@@ -40,6 +40,66 @@ module Zk
     end
   end
 
+  class ZookeeperConfig
+    attr_reader :config
+
+    def initialize(config: [])
+      @config = config
+    end
+
+    def self.from_h(input)
+      config = []
+      input.each do |k, v|
+        config.append({ k => v })
+      end
+      ZookeeperConfig.new(config: config)
+    end
+
+    def self.from_text(input)
+      config = input.split("\n").map do |line|
+        c = line.split('=')
+        { c[0] => c[1] }
+      end
+      ZookeeperConfig.new(config: config)
+    end
+
+    def apply(update)
+      immutable_fields = %w[dynamicConfigFile]
+      immutable_fields.each { |k| update.removekey(k) }
+      @config.map! do |k|
+        key = k.keys.first
+        if immutable_fields.include?(key)
+          update.removekey!(key)
+          k
+        elsif !update.haskey?(key)
+          nil
+        else
+          val = update.value(key)
+          update.removekey!(key)
+          { key => val }
+        end
+      end.reject!(:nil?)
+      update.config.each { |k| @config.append(k) }
+      to_s
+    end
+
+    def haskey?(key)
+      @config.any? { |k| k.keys.first == key }
+    end
+
+    def removekey!(key)
+      @config.reject! { |k| k.keys.first == key }
+    end
+
+    def value(key)
+      @config.select { |k| k.keys.first == key }.first.values.first
+    end
+
+    def to_s
+      @config.map { |k| "#{k.keys.first}=#{k.values.first}" }.join("\n")
+    end
+  end
+
   module Gem
     def zk
       require 'zookeeper'
