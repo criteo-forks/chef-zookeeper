@@ -40,73 +40,41 @@ module Zk
     end
   end
 
-  class ZookeeperConfig
-    attr_reader :config
-
-    def initialize(config: [])
-      @config = config
-    end
+  class ZookeeperConfig < Hash
+    IMMUTABLE_FIELDS = %w(dynamicConfigFile).freeze
 
     def self.from_h(input)
-      config = []
-      input.each do |k, v|
-        config.append({ k => v })
-      end
-      ZookeeperConfig.new(config: config)
+      ZookeeperConfig.new.merge(input)
     end
 
     def self.from_text(input)
-      config = input.split("\n").map do |line|
+      out = ZookeeperConfig.new
+      input.split("\n").each do |line|
         c = line.split('=')
-        { c[0] => c[1] }
+        out.merge!({ c[0] => c[1] })
       end
-      ZookeeperConfig.new(config: config)
+      out
     end
 
     def apply!(source)
-      update = source.dup
-      immutable_fields = %w[dynamicConfigFile]
-      immutable_fields.each { |k| update.removekey!(k) }
-      @config.map! do |k|
-        key = k.keys.first
-        if immutable_fields.include?(key)
-          update.removekey!(key)
-          k
-        elsif !update.haskey?(key)
+      update = source.reject { |k, _| IMMUTABLE_FIELDS.include?(k) }
+      transform_values!.with_index do |v, i|
+        k = keys[i]
+        if IMMUTABLE_FIELDS.include?(k)
+          v
+        elsif !update.key?(k)
           nil
         else
-          val = update.value(key)
-          update.removekey!(key)
-          { key => val }
+          update.delete(k)
         end
-      end.compact!
-      update.config.each { |k| @config.append(k) }
+      end
+      compact!
+      merge!(update)
       self
     end
 
-    def haskey?(key)
-      @config.any? { |k| k.keys.first == key }
-    end
-
-    def removekey!(key)
-      @config.reject! { |k| k.keys.first == key }
-    end
-
-    def value(key)
-      @config.select { |k| k.keys.first == key }.first.values.first
-    end
-
-    def index(key)
-      val = @config.find { |k| k.keys.first == key }
-      @config.index(val)
-    end
-
     def to_s
-      @config.map { |k| "#{k.keys.first}=#{k.values.first}" }.join("\n")
-    end
-
-    def dup
-      ZookeeperConfig.new(config: config.dup)
+      map { |k, v| "#{k}=#{v}" }.join("\n")
     end
   end
 

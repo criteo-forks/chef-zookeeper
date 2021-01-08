@@ -65,15 +65,15 @@ RSpec.describe Zk::ZookeeperConfig do
     end
 
     it 'updates existing fields' do
-      expect(subject.value('keyA')).to eq 'valueE'
+      expect(subject.fetch('keyA')).to eq 'valueE'
     end
 
     it 'removes removed fields' do
-      expect(subject.haskey?('keyB')).to be_falsy
+      expect(subject.key?('keyB')).to be_falsy
     end
 
     it 'adds added fields' do
-      expect(subject.value('keyD')).to eq 'valueD'
+      expect(subject.fetch('keyD')).to eq 'valueD'
     end
 
     it 'keeps order of updated fields' do
@@ -92,15 +92,32 @@ RSpec.describe Zk::ZookeeperConfig do
       end
     end
 
-    context 'with immutable_fields in conf' do
+    context 'with immutable_fields in previous and new conf' do
       before do
         existing_hash.merge!({ 'dynamicConfigFile' => 'good' })
         update_hash.merge!({ 'dynamicConfigFile' => 'bad' })
       end
       it 'does not update them' do
-        expect(subject.value('dynamicConfigFile')).to eq 'good'
+        expect(existing_config.fetch('dynamicConfigFile')).to eq 'good'
+        expect(update_config.fetch('dynamicConfigFile')).to eq 'bad'
+        expect(subject.fetch('dynamicConfigFile')).to eq 'good'
       end
     end
-
+    context 'with immutable_fields in previous conf only' do
+      before do
+        existing_hash.merge!({ 'dynamicConfigFile' => 'good' })
+      end
+      it 'is preserved' do
+        expect(subject.fetch('dynamicConfigFile')).to eq 'good'
+      end
+    end
+    context 'with immutable_fields in new conf only' do
+      before do
+        update_hash.merge!({ 'dynamicConfigFile' => 'good' })
+      end
+      it 'is not created' do
+        expect(subject.key?('dynamicConfigFile')).to be_falsy
+      end
+    end
   end
 end

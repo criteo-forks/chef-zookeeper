@@ -27,8 +27,8 @@ include Zk::Gem
 action :create do
   return unless has_dynamic_config?(new_resource.nodes, new_resource.static_conf)
 
-  conf = new_resource.nodes.map do |k,v|
-    "#{k}=#{v}" 
+  conf = new_resource.nodes.map do |k, v|
+    "#{k}=#{v}"
   end.join(';2181,') + ';2181'
   dynamic_config!(conf)
 end
