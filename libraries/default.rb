@@ -57,19 +57,8 @@ module Zk
     end
 
     def apply!(source)
-      update = source.reject { |k, _| IMMUTABLE_FIELDS.include?(k) }
-      transform_values!.with_index do |v, i|
-        k = keys[i]
-        if IMMUTABLE_FIELDS.include?(k)
-          v
-        elsif !update.key?(k)
-          nil
-        else
-          update.delete(k)
-        end
-      end
-      compact!
-      merge!(update)
+      reject! { |k, _| !source.keys.include?(k) && !IMMUTABLE_FIELDS.include?(k) }
+      merge!(source.reject { |k, _| IMMUTABLE_FIELDS.include?(k) })
       self
     end
 
