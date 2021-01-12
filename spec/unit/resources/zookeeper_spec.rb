@@ -1,5 +1,5 @@
 require 'spec_helper'
-require_relative '../../../libraries/default.rb'
+require_relative '../../../libraries/default'
 
 describe 'zookeeper' do
   step_into :zookeeper
@@ -40,6 +40,74 @@ RSpec.describe Zk::ZookeeperConfig do
     it 'exports exactly like the input' do
       subject = Zk::ZookeeperConfig.from_text(file_config)
       expect(subject.to_s).to eq(file_config)
+    end
+  end
+
+  # This test validate the whole chain:
+  # * original config is loaded from File (plain text)
+  # * update config is loader from Chef hash
+  # * update is applied to original config
+  # Expected output:
+  # * deleted fields disappear (excepted immutable ones)
+  # * new fields are added at the bottom of the file
+  # * unchanged/updated fields are at same position
+  describe '#from_text#apply#to_s' do
+    let(:existing_text_config) do
+      text = <<~ORIG_FILE
+      clientPort=2181
+      dataDir=/var/lib/zookeeper
+      tickTime=2000
+      initLimit=5
+      syncLimit=2
+      maxClientCnxns=2048
+      4lw.commands.whitelist=conf,isro,mntr,ruok,stat
+      admin.enableServer=false
+      tcpKeepAlive=true
+      reconfigEnabled=true
+      cnxTimeout=3
+      dynamicConfigFile=/opt/zookeeper-3.5.8/conf/zoo.cfg.dynamic.2060000086c
+      ORIG_FILE
+      text.strip
+    end
+    let(:updated_hash_config) do
+      {
+        'cnxTimeout' => 5,
+        'reconfigEnabled' => true,
+        'tcpKeepAlive' => true,
+        'admin.enableServer' => true,
+        'newConfig' => 'bar',
+        '4lw.commands.whitelist' => 'conf,isro,mntr,ruok,stat',
+        'syncLimit' => 3,
+        'initLimit' => 8,
+        'dataDir' => '/toto',
+        'clientPort' => 2181
+      }
+    end
+    let(:expected) do
+      text = <<~EXPECTED_FILE
+      clientPort=2181
+      dataDir=/toto
+      initLimit=8
+      syncLimit=3
+      4lw.commands.whitelist=conf,isro,mntr,ruok,stat
+      admin.enableServer=true
+      tcpKeepAlive=true
+      reconfigEnabled=true
+      cnxTimeout=5
+      dynamicConfigFile=/opt/zookeeper-3.5.8/conf/zoo.cfg.dynamic.2060000086c
+      newConfig=bar
+      EXPECTED_FILE
+      text.strip
+    end
+    let(:subject) do
+      existing = Zk::ZookeeperConfig.from_text(existing_text_config)
+      update = Zk::ZookeeperConfig.from_h(updated_hash_config)
+      existing.apply!(update).to_s
+    end
+    it 'keeps order of original fields, and adds new fields at the end' do
+      puts subject
+      puts expected
+      expect(subject).to eq expected
     end
   end
 

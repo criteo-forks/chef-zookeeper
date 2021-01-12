@@ -41,9 +41,16 @@ module Zk
   end
 
   class ZookeeperConfig < Hash
+    # Note: Hash are ordered by insert order in Ruby
+    # so we use this to read file in order and generate same
+    # output order. merge will update existing fields and
+    # create new fields at the end of the key list.
     IMMUTABLE_FIELDS = %w(dynamicConfigFile).freeze
 
     def self.from_h(input)
+      # Order is irrelevant here, as it's used for
+      # chef attribute 'config', and this hash
+      # is user defined so it can be anything anyway
       ZookeeperConfig.new.merge(input)
     end
 
