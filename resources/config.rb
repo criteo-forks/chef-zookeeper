@@ -46,7 +46,9 @@ action :create do
     content (lazy do
       static_conf = "#{new_resource.conf_dir}/#{new_resource.conf_file}"
       conf = new_resource.config.dup
-      unless has_dynamic_config?(new_resource.nodes, static_conf)
+      if has_dynamic_config?(new_resource.nodes, static_conf)
+        conf.delete('clientPort')
+      else
         conf.merge!(new_resource.nodes)
       end
       new_conf = Zk::ZookeeperConfig.from_h(conf)
