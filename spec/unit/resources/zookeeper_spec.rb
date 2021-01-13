@@ -31,7 +31,7 @@ RSpec.describe Zk::ZookeeperConfig do
 
   describe '#from_file' do
     let(:file_config) do
-      "itemA=valueA\nitemB=valueB"
+      "itemA=valueA\nitemB=valueB\n"
     end
     it 'generates a valid object' do
       subject = Zk::ZookeeperConfig.from_text(file_config)
@@ -51,6 +51,7 @@ RSpec.describe Zk::ZookeeperConfig do
   # * deleted fields disappear (excepted immutable ones)
   # * new fields are added at the bottom of the file
   # * unchanged/updated fields are at same position
+  # * unforces a new line at the bottom of the config
   describe '#from_text#apply#to_s' do
     let(:existing_text_config) do
       text = <<~ORIG_FILE
@@ -84,7 +85,7 @@ RSpec.describe Zk::ZookeeperConfig do
       }
     end
     let(:expected) do
-      text = <<~EXPECTED_FILE
+      <<~EXPECTED_FILE
       clientPort=2181
       dataDir=/toto
       initLimit=8
@@ -97,7 +98,6 @@ RSpec.describe Zk::ZookeeperConfig do
       dynamicConfigFile=/opt/zookeeper-3.5.8/conf/zoo.cfg.dynamic.2060000086c
       newConfig=bar
       EXPECTED_FILE
-      text.strip
     end
     let(:subject) do
       existing = Zk::ZookeeperConfig.from_text(existing_text_config)

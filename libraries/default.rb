@@ -70,7 +70,7 @@ module Zk
     end
 
     def to_s
-      map { |k, v| "#{k}=#{v}" }.join("\n")
+      map { |k, v| "#{k}=#{v}" }.join("\n") + "\n"
     end
   end
 
