@@ -25,6 +25,9 @@ property :connect_str, String, required: true, desired_state: false
 include Zk::Gem
 
 action :create do
+  # If there is no config file, it's unlikely zookeeper is running...
+  return unless ::File.exist?(new_resource.static_conf)
+
   return unless has_dynamic_config?(new_resource.nodes, new_resource.static_conf)
 
   conf = new_resource.nodes.map do |k, v|
