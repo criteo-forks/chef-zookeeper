@@ -187,3 +187,86 @@ RSpec.describe Zk::ZookeeperConfig do
     end
   end
 end
+
+RSpec.describe Zk::ZookeeperDynamicConfig do
+  let(:api_config) do
+    <<~API
+      server.1=1.1.1.1:2888:3888:participant;0.0.0.0:2181
+      server.2=2.2.2.2:2888:3888:participant;0.0.0.0:2181
+      version=20a00015b38
+    API
+  end
+  let(:hash_config) do
+    { 'server.1' => '1.1.1.1:2888:3888', 'server.2' => '2.2.2.2:2888:3888' }
+  end
+  let(:expected_api_call) do
+    'server.1=1.1.1.1:2888:3888;2181,server.2=2.2.2.2:2888:3888;2181'
+  end
+
+  describe '#from_h' do
+    it 'generates a valid object' do
+      subject = Zk::ZookeeperDynamicConfig.from_h(hash_config)
+      expect(subject.size).to eq 2
+    end
+  end
+
+  describe '#from_api' do
+    it 'generates a valid object' do
+      subject = Zk::ZookeeperDynamicConfig.from_api(api_config)
+      expect(subject.size).to eq 2
+    end
+  end
+
+  describe '#==?' do
+    # NOTE: Let's not test too much as we rely on ruby comparisons
+    let(:subject) { object_from_api == object_from_hash }
+    let(:object_from_api) { Zk::ZookeeperDynamicConfig.from_api(api_config) }
+
+    context 'api and resource match' do
+      let(:object_from_hash) { Zk::ZookeeperDynamicConfig.from_h(hash_config) }
+
+      it 'returns true' do
+        expect(subject).to be_truthy
+      end
+    end
+
+    context 'api and resource match in reverse order' do
+      let(:object_from_hash) do
+        Zk::ZookeeperDynamicConfig.from_h({ 'server.2' => '2.2.2.2:2888:3888', 'server.1' => '1.1.1.1:2888:3888' })
+      end
+
+      it 'returns true' do
+        expect(subject).to be_truthy
+      end
+    end
+    context 'api and resource dont match one internal port' do
+      let(:object_from_hash) do
+        Zk::ZookeeperDynamicConfig.from_h({ 'server.1' => '1.1.1.1:2888:3888', 'server.2' => '2.2.2.2:2888:3898' })
+      end
+
+      it 'returns false' do
+        expect(subject).to be_falsy
+      end
+    end
+    context 'api and resource dont match hostname' do
+      let(:object_from_hash) do
+        Zk::ZookeeperDynamicConfig.from_h({ 'server.1' => '0.0.0.0:2888:3888', 'server.2' => '2.2.2.2:2888:3888' })
+      end
+
+      it 'returns false' do
+        expect(subject).to be_falsy
+      end
+    end
+  end
+
+  describe '#to_s' do
+    it 'returns a correct API config from from_h' do
+      config = Zk::ZookeeperDynamicConfig.from_h(hash_config)
+      expect(config.to_s).to eq expected_api_call
+    end
+    it 'returns a correct API config from from_api' do
+      config = Zk::ZookeeperDynamicConfig.from_api(api_config)
+      expect(config.to_s).to eq expected_api_call
+    end
+  end
+end

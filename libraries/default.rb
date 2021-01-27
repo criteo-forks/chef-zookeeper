@@ -40,8 +40,43 @@ module Zk
     end
   end
 
+  class ZookeeperDynamicConfig < Hash
+    # FIXME: client port is hardcoded in this cookbook
+    # so it's unlikely working if Zk client port is different or
+    # if there are several Zk instances on same node. We do so
+    # because our recipes don't send client port info for now.
+    CLIENT_PORT = 2181
+
+    # Fields we ignore when comparing
+    IGNORED_FIELDS = %w(version).freeze
+
+    def self.from_api(input)
+      h = ZookeeperDynamicConfig.new
+      input.each_line do |line|
+        line = line.split('=')
+        key = line[0].strip
+        val = line[1].strip
+
+        next if IGNORED_FIELDS.include?(key)
+
+        # NOTE: Client port is remaining group
+        fqdn, port1, port2, = val.match(/(.*):([0-9]+):([0-9]+):.*:([0-9]+)/i).captures
+        h.merge!({ key => "#{fqdn}:#{port1}:#{port2}" })
+      end
+      h
+    end
+
+    def self.from_h(input)
+      ZookeeperDynamicConfig.new.merge(input)
+    end
+
+    def to_s
+      map { |k, v| "#{k}=#{v}" }.join(";#{CLIENT_PORT},") + ";#{CLIENT_PORT}"
+    end
+  end
+
   class ZookeeperConfig < Hash
-    # Note: Hash are ordered by insert order in Ruby
+    # NOTE: Hash are ordered by insert order in Ruby
     # so we use this to read file in order and generate same
     # output order. merge will update existing fields and
     # create new fields at the end of the key list.
@@ -95,6 +130,13 @@ module Zk
       File.readlines(conf_file).select do |line|
         line =~ /dynamicConfigFile/
       end[0].split('=')[1].strip
+    end
+
+    def dynamic_config
+      ret = zk.get(path: '/zookeeper/config')
+      raise 'Error fetching current config from API' unless ret[:rc].zero?
+
+      ret[:data]
     end
 
     def dynamic_config!(c)
