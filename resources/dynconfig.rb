@@ -30,10 +30,14 @@ action :create do
 
   return unless has_dynamic_config?(new_resource.nodes, new_resource.static_conf)
 
-  conf = new_resource.nodes.map do |k, v|
-    "#{k}=#{v}"
-  end.join(';2181,') + ';2181'
-  dynamic_config!(conf)
+  original = ZookeeperDynamicConfig.from_api(dynamic_config)
+  target = ZookeeperDynamicConfig.from_h(new_resource.nodes)
+
+  return if original == target
+
+  converge_by('change dynamic configuration') do
+    dynamic_config!(target.to_s)
+  end
 end
 
 action :delete do
