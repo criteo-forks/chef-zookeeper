@@ -30,8 +30,8 @@ action :create do
 
   return unless has_dynamic_config?(new_resource.nodes, new_resource.static_conf)
 
-  original = ZookeeperDynamicConfig.from_api(dynamic_config)
-  target = ZookeeperDynamicConfig.from_h(new_resource.nodes)
+  original = Zk::ZookeeperDynamicConfig.from_api(dynamic_config)
+  target = Zk::ZookeeperDynamicConfig.from_h(new_resource.nodes)
 
   return if original == target
 
