@@ -59,8 +59,8 @@ module Zk
 
         next if IGNORED_FIELDS.include?(key)
 
-        # NOTE: Client port is remaining group
-        fqdn, port1, port2, = val.match(/(.*):([0-9]+):([0-9]+):.*:([0-9]+)/i).captures
+        # NOTE: Client port is remaining part of the value but we consider it a constant anyway 🤷
+        fqdn, port1, port2, = val.match(/(.*):([0-9]+):([0-9]+):.*/i).captures
         h.merge!({ key => "#{fqdn}:#{port1}:#{port2}" })
       end
       h

@@ -36,6 +36,9 @@ action :create do
   return if original == target
 
   converge_by('change dynamic configuration') do
+    Chef::Log.warn 'Updating dynamic configuration:'
+    Chef::Log.warn "  from: #{original}"
+    Chef::Log.warn "  to: #{target}"
     dynamic_config!(target.to_s)
   end
 end
