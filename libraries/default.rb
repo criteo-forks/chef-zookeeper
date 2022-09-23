@@ -61,7 +61,7 @@ module Zk
 
         # NOTE: Client port is remaining group
         fqdn, port1, port2, = val.match(/^(.*):([0-9]+):([0-9]+):/).captures
-        h.merge!({ key => "#{fqdn}:#{port1}:#{port2}" })
+        h.merge!({ key => "#{fqdn}:#{port1}:#{port2}:participant;0.0.0.0:2181" })
       end
       h
     end
