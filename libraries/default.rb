@@ -59,19 +59,33 @@ module Zk
 
         next if IGNORED_FIELDS.include?(key)
 
-        # NOTE: Client port is remaining group
-        fqdn, port1, port2, = val.match(/^(.*):([0-9]+):([0-9]+):/).captures
-        h.merge!({ key => "#{fqdn}:#{port1}:#{port2}:participant;0.0.0.0:2181" })
+        h.merge!({ key => normalize_server_conf(val)})
       end
       h
     end
 
+    def self.normalize_server_conf(server_conf)
+      # FIXME: for now we enforce 2181 client port in the dynamic conf,
+      # omitting the optional part (role, client port address)
+      # @see https://zookeeper.apache.org/doc/r3.5.8/zookeeperReconfig.html#sc_reconfig_clientport
+      server_conf_match = server_conf.match(/^(.*):([0-9]+):([0-9]+)(:|$)/)
+      raise <<~SERVER_CONF_SYNTAX_ERROR if server_conf_match.nil?
+        #{server_conf} doesn't match a zookeeper server configuration
+        see https://zookeeper.apache.org/doc/r3.5.8/zookeeperReconfig.html
+      SERVER_CONF_SYNTAX_ERROR
+
+      fqdn, port1, port2, = server_conf_match.captures
+      "#{fqdn}:#{port1}:#{port2};#{CLIENT_PORT}"
+    end
+
     def self.from_h(input)
-      ZookeeperDynamicConfig.new.merge(input)
+      ZookeeperDynamicConfig.new.merge(
+        input.map { |server_id, conf| [server_id, normalize_server_conf(conf)] }.to_h
+      )
     end
 
     def to_s
-      map { |k, v| "#{k}=#{v}" }.join(";#{CLIENT_PORT},") + ";#{CLIENT_PORT}"
+      map { |k, v| "#{k}=#{v}" }.join(',')
     end
   end
 
