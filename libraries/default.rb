@@ -158,7 +158,7 @@ module Zk
       # FIXME(t.lange): zk gem will hopefully export the reconfig command one day
       authstr = ''
       authstr = "addauth #{auth_scheme} #{auth_cert}\n" unless auth_cert.nil?
-      Mixlib::ShellOut.new("echo -e \"#{authstr}reconfig -members #{c}\" | /opt/zookeeper/bin/zkCli.sh").run_command.error!
+      Mixlib::ShellOut.new("echo -e \"#{authstr}reconfig -members #{c}\" | #{zk_cli_path}").run_command.error!
     end
 
     def compile_acls
