@@ -129,6 +129,9 @@ module Zk
       # use class variable otherwise new connection is created for each resource
       @@zk ||= ::Zookeeper.new(connect_str).tap do |zk|
         zk.add_auth scheme: auth_scheme, cert: auth_cert unless auth_cert.nil?
+      rescue StandardError => e
+        # do not leak credentials
+        raise "Failed to configure Zookeeper auth scheme `#{auth_scheme}`: #{e.class.name}"
       end
     end
 

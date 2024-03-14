@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        instance: ['default-centos-7']
+        instance: ['default-centos-8']
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
