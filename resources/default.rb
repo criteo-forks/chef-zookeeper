@@ -36,7 +36,7 @@ action :install do
   end
 
   if new_resource.use_java_cookbook
-    include_recipe 'java::default'
+    openjdk_pkg_install node.read('java', 'jdk_version') || '8'
   else
     Chef::Log.info "Assuming you've provided your own Java"
   end
