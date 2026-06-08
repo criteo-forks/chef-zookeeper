@@ -36,7 +36,10 @@ action :create do
   # dynamic config file may be missing on disk. Either way, we cannot
   # apply reconfig via the API. zookeeper_config and the service
   # restart will converge on the next chef run once ZK is up.
-  return unless zookeeper_running_and_healthy?
+  unless zookeeper_running_and_healthy?
+    Chef::Log.warn 'zookeeper not running or not healthy, skipping dynamic reconfiguration'
+    return
+  end
 
   original = Zk::ZookeeperDynamicConfig.from_api(dynamic_config)
   target = Zk::ZookeeperDynamicConfig.from_h(new_resource.nodes)
