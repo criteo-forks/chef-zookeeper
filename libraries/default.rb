@@ -124,6 +124,27 @@ module Zk
   end
 
   module Gem
+    def zookeeper_running_and_healthy?
+      require 'socket'
+      require 'timeout'
+
+      # Extract host and port from connect_str (e.g. "localhost:2181")
+      host, port = connect_str.split(':')
+      port = port.to_i
+
+      begin
+        Timeout.timeout(3) do
+          socket = TCPSocket.new(host, port)
+          socket.puts('ruok')
+          response = socket.gets&.strip
+          socket.close
+          response == 'imok'
+        end
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Timeout::Error, SocketError
+        false
+      end
+    end
+
     def zk
       require 'zookeeper'
       # use class variable otherwise new connection is created for each resource

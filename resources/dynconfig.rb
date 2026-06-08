@@ -31,6 +31,13 @@ action :create do
 
   return unless has_dynamic_config?(new_resource.nodes, new_resource.static_conf)
 
+  # If Zookeeper is not running and healthy, skip dynamic reconfig.
+  # The service may not have started yet (e.g. after a reboot) or the
+  # dynamic config file may be missing on disk. Either way, we cannot
+  # apply reconfig via the API. zookeeper_config and the service
+  # restart will converge on the next chef run once ZK is up.
+  return unless zookeeper_running_and_healthy?
+
   original = Zk::ZookeeperDynamicConfig.from_api(dynamic_config)
   target = Zk::ZookeeperDynamicConfig.from_h(new_resource.nodes)
 
